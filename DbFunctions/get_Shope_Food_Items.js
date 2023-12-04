@@ -1,4 +1,4 @@
-const Get_Shope_Food = ()=>{
+const Get_Shope_Food = (Id)=>{
     let food_data = [
         { Name: "Dabeli1", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 1000, Place: "Pit", URL:'http://192.168.1.11:8000/Imgs/Img1.jpeg'  },
     
