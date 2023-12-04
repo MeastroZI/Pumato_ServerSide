@@ -1,23 +1,18 @@
 const express = require('express') ;
 const https = require('https')
-const ShopeArr = require("./Shope_Detail")
+
 const fs = require('fs')
 const app = express();
 const path = require('path');
 const PORT = 8000 ;
+const {Get_Food_data} = require ("./DbFunctions/get_Food_data") ;
+const {Get_Shope_data} = require ("./DbFunctions/get_Shope_Data");
+const {Get_Shope_Food} = require ( "./DbFunctions/get_Shope_Food_Items")
+const {Fetch_Orders} =require ("./DbFunctions/fetch_Food_Orders");
+
 
 let IDReached  = 0 ;
-let food_data = [
-    { Name: "Dabeli1", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 1000, Place: "Pit", URL:'https://192.168.1.11:8000/Imgs/Img1.jpeg'  },
 
-    { Name: "Dabeli2", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 10, Place: "Pit", URL :'https://192.168.1.11:8000/Imgs/Img2.jpeg'   },
-
-    { Name: "Dabeli3", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 1000, Place: "Piet", URL: 'https://192.168.1.11:8000/Imgs/Img3.jpeg'   },
-
-    { Name: "Dabeli4", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 100, Place: "Piet", URL: 'https://192.168.1.11:8000/Imgs/Img4.jpeg'   },
-
-    { Name: "Dabeli5", discription: "Lorem ipsum dolor, sit amet consectetur  ", price: 100000, Place: "Piet", URL: 'https://192.168.1.11:8000/Imgs/Img5.jpeg'   },
-]
 
 app.use('/Imgs' , express.static(path.join(__dirname , 'Imgs'))) ;
 
@@ -27,32 +22,37 @@ app.get('/' , (req , res)=>{
 
 app.get('/GetData', (req, res) => {
     console.log("get the req")
-    assignIdToData();
+    let food_data = Get_Food_data () ;
+    assignIdToData(food_data);
     res.json(food_data);
     res.end()
   });
 
 app.post('/GetShope', (req , res)=>{
     console.log("get the req for shope");
-    res.json(ShopeArr);
+    const ShopeData = Get_Shope_data() ; 
+    res.json(ShopeData);
     res.end;
 
+}) ;
+
+app.post('/Fetch_Orders' , (res , req)=>{
+    const food_Orders = Fetch_Orders () ;
+    res.json(food_Orders ) ;
+    res.end ;
 })
 
 
 
 
-const Keys = {
-    key : fs.readFileSync(path.join(__dirname , 'cert' , 'key.pem')),
-    cert : fs.readFileSync(path.join(__dirname , 'cert' , 'cert.pem'))
-}
-const server = https.createServer(Keys , app )
+
+const server = app;
 
 server.listen(PORT , ()=>{
     console.log(`https server is runnin on ${PORT}`)
 })
 
-function assignIdToData(){
+function assignIdToData(food_data){
     food_data.forEach((itm)=>{
         itm.id = IDReached ;
         IDReached = IDReached+1 ;
