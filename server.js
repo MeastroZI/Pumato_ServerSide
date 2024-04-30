@@ -1,75 +1,125 @@
-const express = require('express') ;
+require('dotenv').config();
+const express = require('express');
 const https = require('https')
+const bodyParser = require('body-parser')
+
 
 const fs = require('fs')
 const app = express();
 const path = require('path');
-const PORT = 8000 ;
-const {Get_Food_data} = require ("./DbFunctions/get_Food_data") ;
-const {Get_Shope_data} = require ("./DbFunctions/get_Shope_Data");
-const {Get_Shope_Food} = require ( "./DbFunctions/get_Shope_Food_Items")
-const {Fetch_Orders} =require ("./DbFunctions/fetch_Food_Orders");
-const {AssignIdToData} = require("./utils/assingIdToData")
-const {Autherize} = require ("./utils/Authentication")
+const PORT = 8000;
+const { FechFoodData } = require("./DbFunctions/buyer_side/get_Food_data");
+const { Get_Shope_data } = require("./DbFunctions/buyer_side/get_Shope_Data");
+const { Get_Shope_Food } = require("./DbFunctions/buyer_side/get_Shope_Food_Items")
+const { Fetch_Orders } = require("./DbFunctions/buyer_side/fetch_Food_Orders");
+const { Is_User_In_Db } = require('./DbFunctions/Chek_User_In_Db')
+const { SignUp } = require('./DbFunctions/New_User')
 
 
-app.use('/Imgs' , express.static(path.join(__dirname , 'Imgs'))) ;
+const { main_func } = require('./DbFunctions/seller_side/Enter_Food_Item')
+
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use('/Imgs', express.static(path.join(__dirname, 'Imgs')));
 app.use(express.json());
 
 
-app.get('/' , (req , res)=>{
+app.get('/', (req, res) => {
     res.send("hellp , express server !");
 })
 
 app.post('/GetData', (req, res) => {
     console.log("get the req")
-    const UserData = req.body ;
-    if (Autherize(UserData)){
-
-        let food_data = Get_Food_data () ;
-        AssignIdToData(food_data);
-        res.json(food_data);
+    const UserData = req.body;
+    FechFoodData(5).then((result) => {
+        res.json(result)
+        console.log(result)
         res.end()
-    }
-    else {
-        res.status(401).json({error : "you are unautherize"})
-    }
-  });
+    }).catch((err) => {
+        console.log(err)
+        res.status(404).json({ err: err })
+        res.end()
+    })
+});
 
-app.post('/GetShope', (req , res)=>{
+app.post('/GetShope', (req, res) => {
     console.log("get the req for shope");
-    const UserData = req.body ;
-    if (Autherize(UserData)) {
-        const ShopeData = Get_Shope_data() ; 
-        res.json(ShopeData);
-        res.end;
-        
-    }
-    else {
-        res.status(401).json({error : "you are unautherize"})
-    }
+    Get_Shope_data().then((result) => {
+        res.json(result)
+        res.end()
+    }).catch((err) => {
+        console.log(err)
+        res.status(404).json({ err: err })
+        res.end()
+    })
 
-}) ;
+});
 
-app.post('/Fetch_Orders' , (req , res)=>{
-    const UserData = req.body ;
-    console.log (UserData)
-    if (Autherize(UserData)) {
+app.post('/Get_Shope_Items', (req, res) => {
+    const ShopeName = req.body.Name
+    Get_Shope_Food(ShopeName).then((data) => {
+        res.json(data)
+        res.end()
+    }).catch((err) => {
+        res.status(404).json({ error: err })
+        res.end()
+    })
+})
 
-        const food_Orders = Fetch_Orders () ;
-        res.json(food_Orders ) ;
-        res.end ;
-        
-    }
-    else {
-        res.status(401).json({error : "you are unautherize"})
-    }
-}) ;
+app.post('/Set_Food_Items', (req, res) => {
+    console.log("get the req")
+    const body = req.body
+    const result = main_func(body)
+    res.json({ sucess: result })
+    res.end()
+})
 
-app.post('/Get_Shope_Items' , (req , res)=>{
-    const ShopeItems = Get_Shope_Food (ShopeId) ;
-    res.json (ShopeItems) ;
-    res.end;
+app.post('/Login', (req, res) => {
+    const userData = req.body
+    Is_User_In_Db(userData).then((result) => {
+        console.log(result)
+        if (result) {
+            res.json({ sucess: result })
+            res.end()
+        }
+        else {
+            res.status(400).json({ error: "Authentication fail" })
+            res.end()
+        }
+    }).catch((err) => {
+        res.status(404).json({ error: err })
+        res.end()
+    })
+})
+
+
+app.post('/SignUp', (req, res) => {
+    const userData = req.body
+    SignUp(userData).then((result) => {
+        console.log(result)
+        if (result.sucess) {
+            res.json(result)
+            res.end()
+        }
+        else {
+            res.status(404).json({ error: result.Msg })
+            res.end()
+        }
+    }).catch((err) => {
+        res.status(404).json({ error: err })
+        res.end()
+    })
+})
+
+app.post('/Fetch_Orders', (req, res) => {
+    const userData = req.body
+    Fetch_Orders(userData).then((result) => {
+        res.json(result)
+        res.end()
+    }).catch((err) => {
+        res.status(404).json({ error: err })
+        console.log(err)
+        res.end()
+    })
 })
 
 
@@ -78,7 +128,7 @@ app.post('/Get_Shope_Items' , (req , res)=>{
 
 const server = app;
 
-server.listen(PORT , ()=>{
+server.listen(PORT, () => {
     console.log(`https server is runnin on ${PORT}`)
 })
 
