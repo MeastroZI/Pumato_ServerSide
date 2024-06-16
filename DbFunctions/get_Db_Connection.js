@@ -20,10 +20,12 @@ const connectionPool = []
 
 async function getMongoClientInstance() {
     if (connectionPool.length-1 > 0) {
+        console.log("resusing the cleint")
         await connectionPool[connectionPool.length-1].connect()
         return connectionPool[connectionPool.length-1]
     }
     else {
+        console.log("created new client")
         const client = new MongoClient(uri, {
             serverApi: {
                 version: ServerApiVersion.v1,

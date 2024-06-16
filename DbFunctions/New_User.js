@@ -13,7 +13,7 @@ async function SignUp(userData) {
         return {sucess : false , Msg: "User Name Alredy exits"}
     }
     else {
-        const result = await collection.insertOne({Name:userData.UserName , Password: userData.Password, AccountType: userData.AccountType})
+        const result = await collection.insertOne({Name:userData.UserName , Password: userData.Password, Account_Type: userData.AccountType})
         console.log(result)
         if (result.acknowledged ) {
             return {sucess: true }

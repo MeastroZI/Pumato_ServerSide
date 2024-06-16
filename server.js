@@ -14,14 +14,36 @@ const { Get_Shope_Food } = require("./DbFunctions/buyer_side/get_Shope_Food_Item
 const { Fetch_Orders } = require("./DbFunctions/buyer_side/fetch_Food_Orders");
 const { Is_User_In_Db } = require('./DbFunctions/Chek_User_In_Db')
 const { SignUp } = require('./DbFunctions/New_User')
-
+const { creat_Order } = require('./DbFunctions/seller_side/Make_orders')
 
 const { main_func } = require('./DbFunctions/seller_side/Enter_Food_Item')
+
+const Authentication_Middleware =  (req , res , next) =>{
+    if (req.path == '/SignUp' || req.path == "/Imgs"){
+        next()
+    }
+    else {
+        console.log(req.body)
+        Is_User_In_Db(req.body.userData).then((result)=>{
+            
+            if (result){
+                console.log("user is authenticated")
+                next();
+            }
+            else {
+                res.status(403).json({ error: 'Forbidden request' });
+                res.end()
+            }
+        });
+    }
+}
+
+
 
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use('/Imgs', express.static(path.join(__dirname, 'Imgs')));
 app.use(express.json());
-
+app.use(Authentication_Middleware)
 
 app.get('/', (req, res) => {
     res.send("hellp , express server !");
@@ -67,29 +89,42 @@ app.post('/Get_Shope_Items', (req, res) => {
 
 app.post('/Set_Food_Items', (req, res) => {
     console.log("get the req")
-    const body = req.body
+    // {
+
+    //     userData: {
+    //         UserName: 'test',
+    //         Password: 'Password',
+    //         Account_Type: 'Buyer',
+    //     },
+    //     reqData : {
+    //         image: imagedata,
+
+    //     }
+
+    // }
+    const body = req.body.reqData ;
     const result = main_func(body)
     res.json({ sucess: result })
     res.end()
 })
 
-app.post('/Login', (req, res) => {
-    const userData = req.body
-    Is_User_In_Db(userData).then((result) => {
-        console.log(result)
-        if (result) {
-            res.json({ sucess: result })
-            res.end()
-        }
-        else {
-            res.status(400).json({ error: "Authentication fail" })
-            res.end()
-        }
-    }).catch((err) => {
-        res.status(404).json({ error: err })
-        res.end()
-    })
-})
+// app.post('/Login', (req, res) => {
+//     const userData = req.body
+//     Is_User_In_Db(userData).then((result) => {
+//         console.log(result)
+//         if (result) {
+//             res.json({ sucess: result })
+//             res.end()
+//         }
+//         else {
+//             res.status(400).json({ error: "Authentication fail" })
+//             res.end()
+//         }
+//     }).catch((err) => {
+//         res.status(404).json({ error: err })
+//         res.end()
+//     })
+// })
 
 
 app.post('/SignUp', (req, res) => {
@@ -122,13 +157,23 @@ app.post('/Fetch_Orders', (req, res) => {
     })
 })
 
-
-
-
+app.post('/Make_Order' , (req , res)=>{
+    creat_Order(req.body).then((result)=>{
+        res.json(result)
+        res.end()
+    }).catch((err)=>{
+        res.status(404).json({error:err})
+        console.log(err)
+        res.end()
+    })
+})
 
 const server = app;
 
 server.listen(PORT, () => {
     console.log(`https server is runnin on ${PORT}`)
 })
+
+
+
 

@@ -10,6 +10,7 @@ async function Fetch_Orders(UserData){
     console.log({[AccountType]: UserData.UserName})
     const result = await collection.find({[AccountType]: UserData.UserName}).toArray()
     console.log(result)
+    await client.close()
     return result
 
 }
