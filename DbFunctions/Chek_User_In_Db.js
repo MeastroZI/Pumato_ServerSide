@@ -15,7 +15,7 @@ async function Is_User_In_Db(data){
     }
     
 
-    
+    console.log(data)
     const client = await getMongoClientInstance()
     // console.log(data)
     
