@@ -5,7 +5,7 @@ const path = require('path');
 async function sendImage() {
     try {
         // Read the image file synchronously
-        const image = fs.readFileSync(path.join(__dirname, './Img2.jpeg'));
+        const image = fs.readFileSync(path.join(__dirname, './Img6.jpeg'));
 
         // Convert the image data to base64
         const imagedata = image.toString('base64');
@@ -20,6 +20,8 @@ async function sendImage() {
             },
             reqData : {
                 image: imagedata,
+                name : "rice_ka",
+                price : 2000 
 
             }
 

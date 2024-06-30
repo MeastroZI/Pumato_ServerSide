@@ -1,27 +1,33 @@
-const {getMongoClientInstance } = require('./get_Db_Connection')
+const { getMongoClientInstance } = require('./get_Db_Connection')
 const fs = require('fs')
 const path = require('path')
+const { Is_User_In_Db } = require('./Chek_User_In_Db')
 
 
 
-
-async function SignUp(userData) { 
+async function SignUp(userData) {
     const client = await getMongoClientInstance()
     const collection = client.db('Pu_Mato').collection('User_Info')
-    const IsUserNameExits = await collection.countDocuments({ Name: userData.UserName})
-    if ( IsUserNameExits >0) { 
-        return {sucess : false , Msg: "User Name Alredy exits"}
+    const result = await collection.updateOne(
+        { Email: userData.email, Password: userData.password, Code: userData.code },
+        {
+            $unset: { expireAt: '', Code: '' }, // $unset to remove fields
+            $set: {  
+                AccountType : userData.accountType,
+                Verified : true 
+            } // $set to update or set another field
+        }
+    );
+
+    console.log(result)
+    if (result.modifiedCount > 0) {
+        return { sucess: true, message: "sucess" }
     }
     else {
-        const result = await collection.insertOne({Name:userData.UserName , Password: userData.Password, Account_Type: userData.AccountType})
-        console.log(result)
-        if (result.acknowledged ) {
-            return {sucess: true }
-        }
-        else {
-            return {sucess: false , Msg : "Error while inserting the User data" }
-        }
+        return { sucess: false, message: "Otp Expire" }
     }
+
+
 
 }
 
