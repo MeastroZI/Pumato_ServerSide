@@ -109,23 +109,23 @@ app.post('/Set_Food_Items', (req, res) => {
     res.end()
 })
 
-// app.post('/Login', (req, res) => {
-//     const userData = req.body
-//     Is_User_In_Db(userData).then((result) => {
-//         console.log(result)
-//         if (result) {
-//             res.json({ sucess: result })
-//             res.end()
-//         }
-//         else {
-//             res.status(400).json({ error: "Authentication fail" })
-//             res.end()
-//         }
-//     }).catch((err) => {
-//         res.status(404).json({ error: err })
-//         res.end()
-//     })
-// })
+app.post('/Login', (req, res) => {
+    const userData = req.body.UserData
+    Is_User_In_Db({Email:userData.email , Password : userData.password}).then((result) => {
+        console.log(result)
+        if (result) {
+            res.json({ sucess: result })
+            res.end()
+        }
+        else {
+            res.status(400).json({ error: "Authentication fail" })
+            res.end()
+        }
+    }).catch((err) => {
+        res.status(404).json({ error: err })
+        res.end()
+    })
+})
 
 
 app.post('/SignUp', (req, res) => {
