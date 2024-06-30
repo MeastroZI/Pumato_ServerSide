@@ -14,16 +14,18 @@ const { Fetch_Orders } = require("./DbFunctions/buyer_side/fetch_Food_Orders");
 const { Is_User_In_Db } = require('./DbFunctions/Chek_User_In_Db')
 const { SignUp } = require('./DbFunctions/New_User')
 const { creat_Order } = require('./DbFunctions/seller_side/Make_orders')
-const {getToken} = require('./utils/getToken')
+const { getToken } = require('./utils/getToken')
 const { main_func } = require('./DbFunctions/seller_side/Enter_Food_Item')
-
+const { setVerificationCode } = require('./DbFunctions/setUserVerification')
+const { setUserNameInDB } = require('./DbFunctions/setUserName')
 const Authentication_Middleware = (req, res, next) => {
-    if (req.path == '/SignUp' || req.path == "/Imgs") {
+    if (req.path == '/SignUp' || req.path == "/Imgs" || req.path == "/SendMail") {
         next()
     }
     else {
         console.log(req.body)
-        Is_User_In_Db(req.body.userData).then((result) => {
+        const userData = req.body.UserData
+        Is_User_In_Db({ Email: userData.email, Password: userData.password }).then((result) => {
 
             if (result) {
                 console.log("user is authenticated")
@@ -128,6 +130,7 @@ app.post('/Set_Food_Items', (req, res) => {
 
 app.post('/SignUp', (req, res) => {
     const userData = req.body
+    console.log("recive")
     SignUp(userData).then((result) => {
         console.log(result)
         if (result.sucess) {
@@ -135,10 +138,11 @@ app.post('/SignUp', (req, res) => {
             res.end()
         }
         else {
-            res.status(404).json({ error: result.Msg })
+            res.status(404).json({ error: result.message })
             res.end()
         }
     }).catch((err) => {
+        console.log(err)
         res.status(404).json({ error: err })
         res.end()
     })
@@ -167,35 +171,66 @@ app.post('/Make_Order', (req, res) => {
     })
 })
 
-app.post('/SendMail', (req, res) => {
-    const verficationCode = getToken();
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.SERVER_EMAIL,  // Your email address
-            pass: process.env.SERVER_MAIL_PASSWORD // Your email password or app-specific password
-        }
-    });
-    const targetMail = req.body.Mail 
-    const mailOptions = {
-        from: process.env.SERVER_EMAIL,  // Sender address
-        to: targetMail,   // List of recipients
-        subject: 'Verfication code for Pu-Mato',         // Subject line
-        text: `This is the One time password for the verfication of your account this is valid for 2min ${verficationCode }` 
-    };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.error('Error occurred:', error.message);
-            res.status(501).json({sucess : false , message : error.message})
-            return;
+/* {
+    email: ******,
+    password : *********
+}*/
+
+app.post('/SendMail', async (req, res) => {
+    const verficationCode = getToken();
+    const result = await setVerificationCode({ ...req.body, code: verficationCode })
+    if (result.sucess) {
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.SERVER_EMAIL,  // Your email address
+                pass: process.env.SERVER_MAIL_PASSWORD // Your email password or app-specific password
+            }
+        });
+
+        const targetMail = req.body.email
+        const mailOptions = {
+            from: process.env.SERVER_EMAIL,  // Sender address
+            to: targetMail,   // List of recipients
+            subject: 'Verfication code for Pu-Mato',         // Subject line
+            text: `This is the One time password for the verfication of your account this is valid for 2min ${verficationCode}`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error occurred:', error.message);
+                res.status(501).json({ sucess: false, message: error.message })
+                return;
+            }
+            else {
+                res.json({ sucess: true, message: "Sucess" })
+                console.log('Message ID:', info.messageId);
+                console.log('Email sent successfully!');
+            }
+        });
+    }
+    else {
+        console.log(result)
+        res.status(501).json(result)
+    }
+})
+
+app.post('/setUserName', async (req, res) => {
+    if (req.body && req.body.userName && ! await Is_User_In_Db({ UserName: req.body.userName })) {
+        const result = await setUserNameInDB(req.body)
+        if (!result.sucess) {
+            res.status(501)
         }
-        else {
-            res.json({sucess : true , message : "Sucess"})
-            console.log('Message ID:', info.messageId);
-            console.log('Email sent successfully!');
-        }
-    });
+        res.json(result)
+        res.end()
+
+    }
+    else {
+        res.status(501).json({sucess : false  , message : "UserName is already taken"})
+    }
+
 })
 
 const server = app;
