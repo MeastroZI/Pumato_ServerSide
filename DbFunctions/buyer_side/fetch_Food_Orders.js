@@ -6,7 +6,7 @@ async function Fetch_Orders(UserData){
     const Db = client.db('Pu_Mato')
     const collection = Db.collection('Orders')
     console.log(UserData)
-    const AccountType = UserData.AccountType=="Seller" ? "ShopeName" : "UserName"
+    const AccountType = UserData.AccountType=="Seller" ? "To" : "From"
     console.log({[AccountType]: UserData.UserName})
     const result = await collection.find({[AccountType]: UserData.UserName}).toArray()
     console.log(result)

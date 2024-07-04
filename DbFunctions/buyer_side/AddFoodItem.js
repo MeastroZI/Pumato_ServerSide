@@ -1,13 +1,12 @@
-const { getMongoClientInstance } = require('./get_Db_Connection')
+const { getMongoClientInstance } = require('../get_Db_Connection')
 const fs = require('fs')
 const path = require('path')
-const { Is_User_In_Db } = require('./Chek_User_In_Db')
 
 
 
-async function SignUp(userData) {
+async function AddFoodItem(userData) {
     const client = await getMongoClientInstance()
-    const collection = client.db('Pu_Mato').collection('User_Info')
+    const collection = client.db('Pu_Mato').collection('Orders')
     const obj = { Email: userData.email, Password: userData.password, Code: userData.code }
     const result = await collection.updateOne(
         { Email: userData.email, Password: userData.password, Code: userData.code },
@@ -27,8 +26,11 @@ async function SignUp(userData) {
     else {
         return { sucess: false, message: "Otp Expire" }
     }
+
+
+
 }
 
 module.exports = {
-    SignUp
+    AddFoodItem
 }

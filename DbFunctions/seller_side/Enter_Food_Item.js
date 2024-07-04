@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 
-async function main_func(data) {
+async function enterFoodItem(data) {
     const connection = getMongoClientInstance()
     const client = await connection
    
@@ -33,4 +33,4 @@ async function main_func(data) {
      
 
 
-module.exports = {main_func}
+module.exports = {enterFoodItem}

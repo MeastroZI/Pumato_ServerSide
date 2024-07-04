@@ -12,8 +12,9 @@ const { Code } = require('mongodb')
 //   }
 
 async function setVerificationCode(data) {
+    console.log(data)
 
-    if (await Is_User_In_Db({ Email: data.email, Verified: true })) {
+    if (await Is_User_In_Db({ Email: data.email, UserName:data.userName ,Verified: true  , AccountType : data.accountType})) {
         return { sucess: false, message: "User with this detail already exists" }
     }
     const client = await getMongoClientInstance()
@@ -23,17 +24,18 @@ async function setVerificationCode(data) {
     if (!isIndexes) {
         await collection.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })
     }
-    const expirationTime = new Date(Date.now() + 100000);
+   
     try {
         const updateResult = await collection.updateOne({ Email: data.email, Verified: false },
-            { $set: { Password: data.password, Code: data.code, expireAt: expirationTime } }
+            { $set: { Password: data.password, Code: data.code, expireAt: expirationTime  , UserName : data.userName , AccountType : data.accountType} }
         )
 
         if (updateResult.modifiedCount == 1 ){
             return { sucess: true, message: "sucess" }
         }
+        const expirationTime = new Date(Date.now() + 180000);
         const result = await collection.insertOne({
-            Email: data.email, Password: data.password, Code: data.code,
+            Email: data.email, Password: data.password, Code: data.code, UserName : data.userName, AccountType : data.accountType ,
             expireAt: expirationTime, Verified: false
         })
         if (result.acknowledged) {

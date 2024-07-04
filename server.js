@@ -15,14 +15,17 @@ const { Is_User_In_Db } = require('./DbFunctions/Chek_User_In_Db')
 const { SignUp } = require('./DbFunctions/New_User')
 const { creat_Order } = require('./DbFunctions/seller_side/Make_orders')
 const { getToken } = require('./utils/getToken')
-const { main_func } = require('./DbFunctions/seller_side/Enter_Food_Item')
+const { enterFoodItem } = require('./DbFunctions/seller_side/Enter_Food_Item')
 const { setVerificationCode } = require('./DbFunctions/setUserVerification')
 const { setUserNameInDB } = require('./DbFunctions/setUserName')
+const { make_Order} = require('./DbFunctions/buyer_side/makeOrder')
+
 const Authentication_Middleware = (req, res, next) => {
     if (req.path == '/SignUp' || req.path == "/Imgs" || req.path == "/SendMail") {
         next()
     }
     else {
+        console.log(req.path)
         console.log(req.body)
         const userData = req.body.UserData
         Is_User_In_Db({ Email: userData.email, Password: userData.password }).then((result) => {
@@ -111,7 +114,7 @@ app.post('/Set_Food_Items', (req, res) => {
 
 app.post('/Login', (req, res) => {
     const userData = req.body.UserData
-    Is_User_In_Db({Email:userData.email , Password : userData.password}).then((result) => {
+    Is_User_In_Db({Email:userData.email , Password : userData.password , AccountType : userData.accountType}).then((result) => {
         console.log(result)
         if (result) {
             res.json({ sucess: result })
@@ -129,6 +132,7 @@ app.post('/Login', (req, res) => {
 
 
 app.post('/SignUp', (req, res) => {
+    console.log(req.body)
     const userData = req.body
     console.log("recive")
     SignUp(userData).then((result) => {
@@ -178,6 +182,7 @@ app.post('/Make_Order', (req, res) => {
 }*/
 
 app.post('/SendMail', async (req, res) => {
+    console.log(req.body)
     const verficationCode = getToken();
     const result = await setVerificationCode({ ...req.body, code: verficationCode })
     if (result.sucess) {
@@ -233,12 +238,28 @@ app.post('/setUserName', async (req, res) => {
 
 })
 
+app.get('/getFoodItemById' , async (req , res)=>{
+    const result = getFoodItemById(req.body.Id)
+    res.json(result)
+})
+
+app.post('/MakeOrders' , async (req , res)=>{
+    const result = make_Order(req.body)
+})
+
+app.post('/AddFoodItem' , async(req , res)=>{
+    if(enterFoodItem(req.body)){
+        res.json({sucess:true})
+    }
+    else 
+    {
+        res.json({sucess : false , message : 'something is wrong'})
+    }
+})
+
+
 const server = app;
 
 server.listen(PORT, () => {
     console.log(`https server is runnin on ${PORT}`)
 })
-
-
-
-
