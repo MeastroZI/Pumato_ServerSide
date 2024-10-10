@@ -21,6 +21,7 @@ async function setVerificationCode(data) {
     const collection = client.db('Pu_Mato').collection('User_Info')
     const indexes = await collection.listIndexes().toArray();
     const isIndexes = indexes.some((obj) => obj.hasOwnProperty('expireAfterSeconds'))
+    const expirationTime = new Date(Date.now() + 180000);
     if (!isIndexes) {
         await collection.createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 })
     }
@@ -33,7 +34,7 @@ async function setVerificationCode(data) {
         if (updateResult.modifiedCount == 1 ){
             return { sucess: true, message: "sucess" }
         }
-        const expirationTime = new Date(Date.now() + 180000);
+       
         const result = await collection.insertOne({
             Email: data.email, Password: data.password, Code: data.code, UserName : data.userName, AccountType : data.accountType ,
             expireAt: expirationTime, Verified: false

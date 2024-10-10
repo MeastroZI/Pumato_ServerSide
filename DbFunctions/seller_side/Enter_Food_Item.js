@@ -4,6 +4,7 @@ const path = require('path')
 
 
 async function enterFoodItem(data) {
+    console.log("get teh req ")
     const connection = getMongoClientInstance()
     const client = await connection
    

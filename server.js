@@ -21,8 +21,14 @@ const { setUserNameInDB } = require('./DbFunctions/setUserName')
 const { make_Order} = require('./DbFunctions/buyer_side/makeOrder')
 
 const Authentication_Middleware = (req, res, next) => {
+    console.log("get")
+    
     if (req.path == '/SignUp' || req.path == "/Imgs" || req.path == "/SendMail") {
         next()
+    }
+    else if(! req.body.UserData  || ! req.body.UserData.email || ! req.body.UserData.email){
+        res.status(403).json({ error: 'Forbidden request' });
+        res.end()
     }
     else {
         console.log(req.path)
@@ -248,6 +254,7 @@ app.post('/MakeOrders' , async (req , res)=>{
 })
 
 app.post('/AddFoodItem' , async(req , res)=>{
+    console.log("get the req for food data " , req.body)
     if(enterFoodItem(req.body)){
         res.json({sucess:true})
     }
@@ -257,6 +264,14 @@ app.post('/AddFoodItem' , async(req , res)=>{
     }
 })
 
+app.post('/SetShopeImage' , async(req , res)=>{
+    if(setProfile(req.body)){
+        res.json({sucess : true});
+    }
+    else {
+        res.json({sucess : false , message : 'something is wrong'})
+    }
+})
 
 const server = app;
 
